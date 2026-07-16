@@ -1,1 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Calendario de actividades y simulador de notas - Modalidad Virtual CUN">
+  <meta name="robots" content="noindex">
+  <title>Calendario de Actividades | Modalidad Virtual CUN</title>
 
+  <style>
+    /* ============================================================
+       TOKENS DE DISEÑO
+       ============================================================ */
+    :root {
+      --bg-grad-1: #093028;
+      --bg-grad-2: #237a57;
+      --accent-soft: #a8e6cf;   /* verde menta: etiquetas y % de corte */
+      --accent-blue: #4facfe;   /* azul: bordes de corte y definitiva */
+      --highlight:   #ffd54f;   /* amarillo: semana actual */
+      --ink: #ffffff;
+      --ink-dim: rgba(255, 255, 255, 0.6);
+      --row-bg: rgba(255, 255, 255, 0.10);
+      --cell-strong-bg: rgba(255, 255, 255, 0.15);
+      --thead-bg: rgba(0, 0, 0, 0.40);
+      --panel-bg: rgba(0, 0, 0, 0.50);
+      --input-bg: rgba(255, 255, 255, 0.05);
+      --radius: 8px;
+      --font-stack: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent; /* el contenedor pinta su propio fondo (ideal para iframe) */
+    }
+
+    body { font-family: var(--font-stack); }
+
+    /* ============================================================
+       CONTENEDOR PRINCIPAL
+       ============================================================ */
+    .calendario-cun {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      border-radius: 15px;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      overflow-x: auto;
+    }
+
+    .calendario-cun__titulo {
+      margin: 0 0 20px;
+      text-align: center;
+      font-size: 22px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .calendario-cun__subtitulo {
+      display: block;
+      margin-top: 4px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-soft);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    /* ============================================================
+       TABLA
+       ============================================================ */
+    .tabla-calendario {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .tabla-calendario thead tr {
+      background: var(--thead-bg);
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--accent-soft);
+    }
+
+    .tabla-calendario th {
+      padding: 12px;
+      font-weight: 700;
+    }
+
+    .tabla-calendario th:first-child  { border-radius: var(--radius) 0 0 var(--radius); }
+    .tabla-calendario th:last-child   { border-radius: 0 var(--radius) var(--radius) 0; }
+    .tabla-calendario th.col-actividad { text-align: left; }
+
+    .tabla-calendario td { padding: 10px 8px; }
+
+    .fila-actividad { background: var(--row-bg); }
+
+    .celda-actividad { text-align: left; }
+    .celda-actividad small { color: var(--ink-dim); }
+
+    .celda-corte {
+      background: var(--cell-strong-bg);
+      border-radius: var(--radius) 0 0 var(--radius);
+      border-left: 4px solid var(--accent-blue);
+      font-weight: bold;
+    }
+
+    .celda-resultado {
+      background: var(--cell-strong-bg);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .celda-resultado .peso-corte { color: var(--accent-soft); }
+
+    .celda-resultado .nota-corte {
+      margin-top: 10px;
+      font-size: 24px;
+      color: var(--ink);
+    }
+
+    .fila-separadora td { height: 10px; padding: 0; }
+
+    /* Enlaces a actividades de CDigital */
+    .celda-actividad a {
+      color: var(--ink);
+      font-weight: bold;
+      text-decoration: underline;
+      text-decoration-color: rgba(255, 255, 255, 0.4);
+      text-underline-offset: 3px;
+    }
+
+    .celda-actividad a:hover,
+    .celda-actividad a:focus-visible {
+      text-decoration-color: var(--accent-soft);
+      color: var(--accent-soft);
+    }
+
+    /* ============================================================
+       SIMULADOR DE NOTA (inputs)
+       ============================================================ */
+    .celda-simulador { background: var(--input-bg); }
+
+    .nota-input {
+      width: 70px;
+      padding: 6px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--ink);
+      font-family: inherit;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .nota-input:focus-visible {
+      outline: 2px solid var(--accent-soft);
+      outline-offset: 1px;
+    }
+
+    /* ============================================================
+       SEMANA ACTUAL
+       ============================================================ */
+    .fila-actividad.es-actual td {
+      background: rgba(255, 213, 79, 0.20);
+      border-top: 2px solid var(--highlight);
+      border-bottom: 2px solid var(--highlight);
+    }
+
+    .fila-actividad.es-actual td:first-child {
+      border-left: 6px solid var(--highlight);
+    }
+
+    .fila-actividad.es-actual .nota-input {
+      border: 2px solid var(--highlight);
+      background: rgba(0, 0, 0, 0.45);
+      font-weight: bold;
+    }
+
+    .badge-semana-actual {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--highlight);
+      color: #1f2937;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* ============================================================
+       PANEL DE RESULTADOS
+       ============================================================ */
+    .panel-resultados {
+      display: flex;
+      justify-content: space-around;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding: 20px;
+      text-align: center;
+      border-radius: 12px;
+      background: var(--panel-bg);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .panel-resultados__etiqueta {
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .panel-resultados__etiqueta--evaluado  { color: var(--accent-soft); }
+    .panel-resultados__etiqueta--definitiva { color: var(--accent-blue); }
+
+    #res_porcentaje { font-size: 28px; font-weight: bold; }
+    #res_definitiva { font-size: 32px; font-weight: bold; color: var(--ink); }
+
+    .nota-legal {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-dim);
+    }
+
+    /* ============================================================
+       RESPONSIVE (iframe angosto / móvil)
+       ============================================================ */
+    @media (max-width: 640px) {
+      .calendario-cun { padding: 12px; border-radius: 10px; }
+      .calendario-cun__titulo { font-size: 17px; }
+      .calendario-cun__subtitulo { font-size: 13px; }
+      .tabla-calendario { font-size: 12px; }
+      .tabla-calendario th, .tabla-calendario td { padding: 8px 5px; }
+      .nota-input { width: 56px; font-size: 13px; }
+      .celda-resultado { font-size: 14px; }
+      .celda-resultado .nota-corte { font-size: 18px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="calendario-cun" id="app-calendario">
+    <h1 class="calendario-cun__titulo">
+      Calendario de Actividades Modalidad Virtual
+      <span class="calendario-cun__subtitulo" id="subtitulo-bloques"></span>
+    </h1>
+
+    <table class="tabla-calendario">
+      <thead>
+        <tr>
+          <th scope="col">Corte Académico</th>
+          <th scope="col">Sem.</th>
+          <th scope="col">Fecha Inicio</th>
+          <th scope="col">Fecha Final</th>
+          <th scope="col" class="col-actividad">Actividad</th>
+          <th scope="col">% Act.</th>
+          <th scope="col">Simular nota</th>
+          <th scope="col">Cálculo Corte</th>
+        </tr>
+      </thead>
+      <tbody id="calendario-body"><!-- Filas generadas por JS desde CONFIG --></tbody>
+    </table>
+
+    <section class="panel-resultados" aria-live="polite">
+      <div>
+        <div class="panel-resultados__etiqueta panel-resultados__etiqueta--evaluado">Porcentaje Evaluado</div>
+        <div id="res_porcentaje">0%</div>
+      </div>
+      <div>
+        <div class="panel-resultados__etiqueta panel-resultados__etiqueta--definitiva">Nota Definitiva</div>
+        <div id="res_definitiva">0.00</div>
+      </div>
+    </section>
+
+    <p class="nota-legal">
+      * La fila resaltada indica la actividad en curso según la fecha actual.
+      La nota simulada es de manera orientativa. Las notas reales se encuentran
+      en las respectivas calificaciones de CDigital.
+    </p>
+  </main>
+
+  <script>
+    /* ============================================================
+       CONFIGURACIÓN DEL PERIODO
+       ------------------------------------------------------------
+       Para actualizar cada bloque/periodo, edita SOLO este objeto.
+       No es necesario tocar el HTML ni el resto del JS.
+       - peso: proporción sobre la nota definitiva (ej. 0.20 = 20%)
+       - url:  enlace a la actividad en CDigital (opcional)
+       - subtitulo: texto pequeño bajo el nombre (opcional)
+       - notaCierre: texto adicional bajo la fecha final (opcional)
+       ============================================================ */
+    const CONFIG = {
+      subtitulo: "26V02 / 26T02 / 26P02 Bloque II | 26V03 / 26T03 / 26P03 Bloque I",
+      cortes: [
+        {
+          nombre: "Primer Corte",
+          pesoCorte: 0.30,
+          actividades: [
+            { semana: 1, inicio: "2026-05-30", fin: "2026-06-07", nombre: "Introducción - Sesión de clase", peso: 0 },
+            { semana: 2, inicio: "2026-06-07", fin: "2026-06-08", nombre: "Quiz 1", subtitulo: "Sesión de Clase", peso: 0.10,
+              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118367" },
+            { semana: 3, inicio: "2026-06-08", fin: "2026-06-14", nombre: "Parcial 1", subtitulo: "Sesión de Clase", peso: 0.20,
+              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118371" }
+          ]
+        },
+        {
+          nombre: "Segundo Corte",
+          pesoCorte: 0.30,
+          actividades: [
+            { semana: 4, inicio: "2026-06-15", fin: "2026-06-21", nombre: "Quiz 2", subtitulo: "Sesión de Clase", peso: 0.10,
+              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118376" },
+            { semana: 5, inicio: "2026-06-22", fin: "2026-06-28", nombre: "Parcial 2", subtitulo: "Sesión de Clase", peso: 0.20,
+              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118380" }
+          ]
+        },
+        {
+          nombre: "Tercer Corte",
+          pesoCorte: 0.40,
+          actividades: [
+            { semana: 6, inicio: "2026-06-29", fin: "2026-07-05", nombre: "ACA - Pitch (Disciplinario - NIP)", subtitulo: "Sesión de Clase", peso: 0.34 },
+            { semana: 7, inicio: "2026-07-06", fin: "2026-07-11", nombre: "Quiz 3", subtitulo: "Sesión de Clase", peso: 0.02,
+              notaCierre: "(*Cierre Periodo 335)",
+              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118395" },
+            { semana: 7, inicio: "2026-07-06", fin: "2026-07-11", nombre: "Coevaluación", peso: 0.02,
+              url: "https://cdigital.cun.edu.co/mod/forum/view.php?id=7118394" },
+            { semana: 7, inicio: "2026-07-06", fin: "2026-07-11", nombre: "Autoevaluación", peso: 0.02,
+              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118393" },
+            { semana: 8, inicio: "2026-07-12", fin: "2026-07-15", nombre: "Cierre de Notas", peso: 0 }
+          ]
+        }
+      ]
+    };
+
+    /* ============================================================
+       MOTOR DE RENDERIZADO Y CÁLCULO
+       (No requiere edición al cambiar de periodo)
+       ============================================================ */
+    (function iniciarCalendarioCUN() {
+      "use strict";
+
+      const contenedor = document.getElementById("app-calendario");
+      const tbody = document.getElementById("calendario-body");
+      if (!contenedor || !tbody) return;
+
+      // ---------- Utilidades ----------
+      function parseFechaLocal(str) {
+        if (!str) return null;
+        const p = String(str).split("-");
+        if (p.length !== 3) return null;
+        return new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1, parseInt(p[2], 10));
+      }
+
+      function formatearFecha(str) {
+        const d = parseFechaLocal(str);
+        if (!d) return "";
+        return d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
+      }
+
+      function esc(texto) {
+        const div = document.createElement("div");
+        div.textContent = texto == null ? "" : String(texto);
+        return div.innerHTML;
+      }
+
+      // ---------- Render ----------
+      const subEl = document.getElementById("subtitulo-bloques");
+      if (subEl) subEl.textContent = CONFIG.subtitulo || "";
+
+      CONFIG.cortes.forEach((corte, idxCorte) => {
+        const numCorte = idxCorte + 1;
+        const totalFilas = corte.actividades.length;
+
+        corte.actividades.forEach((act, idxAct) => {
+          const tr = document.createElement("tr");
+          tr.className = "fila-actividad";
+          tr.dataset.inicio = act.inicio;
+          tr.dataset.fin = act.fin;
+
+          let html = "";
+
+          // Celda de corte (solo en la primera fila del grupo)
+          if (idxAct === 0) {
+            html += '<td class="celda-corte" rowspan="' + totalFilas + '">' + esc(corte.nombre) + "</td>";
+          }
+
+          // Semana y fechas
+          html += "<td>" + esc(act.semana) + "</td>";
+          html += "<td>" + formatearFecha(act.inicio) + "</td>";
+          html += "<td>" + formatearFecha(act.fin) +
+                  (act.notaCierre ? "<br><small>" + esc(act.notaCierre) + "</small>" : "") + "</td>";
+
+          // Actividad (con enlace si existe)
+          const nombreHTML = act.url
+            ? '<strong><a href="' + esc(act.url) + '" target="_blank" rel="noopener" title="' + esc(act.nombre) + '">' + esc(act.nombre) + "</a></strong>"
+            : (act.peso > 0 ? "<strong>" + esc(act.nombre) + "</strong>" : esc(act.nombre));
+
+          html += '<td class="celda-actividad">' + nombreHTML +
+                  (act.subtitulo ? "<br><small>" + esc(act.subtitulo) + "</small>" : "") + "</td>";
+
+          // Peso
+          html += "<td>" + Math.round(act.peso * 100) + "%</td>";
+
+          // Simulador
+          if (act.peso > 0) {
+            html += '<td class="celda-simulador">' +
+                    '<input class="nota-input" type="number" min="0" max="5" step="0.01" inputmode="decimal"' +
+                    ' aria-label="Nota simulada: ' + esc(act.nombre) + '"' +
+                    ' data-peso="' + act.peso + '" data-corte="' + numCorte + '"></td>';
+          } else {
+            html += '<td class="celda-simulador">-</td>';
+          }
+
+          // Celda de resultado del corte (solo en la primera fila del grupo)
+          if (idxAct === 0) {
+            html += '<td class="celda-resultado" rowspan="' + totalFilas + '">' +
+                    '<div class="peso-corte">' + Math.round(corte.pesoCorte * 100) + "%</div>" +
+                    '<div class="nota-corte" id="res_corte_' + numCorte + '">0.00</div></td>';
+          }
+
+          tr.innerHTML = html;
+          tbody.appendChild(tr);
+        });
+
+        // Fila separadora entre cortes
+        if (idxCorte < CONFIG.cortes.length - 1) {
+          const sep = document.createElement("tr");
+          sep.className = "fila-separadora";
+          sep.innerHTML = '<td colspan="8">&nbsp;</td>';
+          tbody.appendChild(sep);
+        }
+      });
+
+      // ---------- Semana actual ----------
+      function marcarSemanaActual() {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        contenedor.querySelectorAll(".fila-actividad").forEach(fila => {
+          const ini = parseFechaLocal(fila.dataset.inicio);
+          const fin = parseFechaLocal(fila.dataset.fin);
+          if (!ini || !fin) return;
+
+          ini.setHours(0, 0, 0, 0);
+          fin.setHours(23, 59, 59, 999);
+
+          if (hoy >= ini && hoy <= fin) {
+            fila.classList.add("es-actual");
+
+            const celda = fila.querySelector(".celda-actividad");
+            if (celda && !celda.querySelector(".badge-semana-actual")) {
+              const badge = document.createElement("span");
+              badge.className = "badge-semana-actual";
+              badge.textContent = "Semana actual";
+              celda.appendChild(document.createElement("br"));
+              celda.appendChild(badge);
+            }
+          }
+        });
+      }
+
+      // ---------- Simulador de notas ----------
+      function calcular() {
+        const aportes = {};
+        const pesosCorte = {};
+        let porcentajeEval = 0;
+        let acumulado = 0;
+
+        CONFIG.cortes.forEach((c, i) => {
+          aportes[i + 1] = 0;
+          pesosCorte[i + 1] = c.pesoCorte;
+        });
+
+        contenedor.querySelectorAll(".nota-input").forEach(input => {
+          let val = parseFloat(input.value);
+          const peso = parseFloat(input.dataset.peso);
+          const corte = parseInt(input.dataset.corte, 10);
+
+          if (isNaN(val)) val = 0;
+          if (val < 0) { val = 0; input.value = 0; }
+          if (val > 5) { val = 5; input.value = 5; }
+
+          const aporte = val * peso;
+          acumulado += aporte;
+          if (input.value !== "") porcentajeEval += peso;
+          aportes[corte] += aporte;
+        });
+
+        Object.keys(aportes).forEach(num => {
+          const el = document.getElementById("res_corte_" + num);
+          if (el) el.textContent = (aportes[num] / pesosCorte[num]).toFixed(2);
+        });
+
+        const resPorc = document.getElementById("res_porcentaje");
+        const resDef = document.getElementById("res_definitiva");
+        if (resPorc) resPorc.textContent = Math.round(porcentajeEval * 100) + "%";
+        if (resDef) resDef.textContent = acumulado.toFixed(2);
+      }
+
+      contenedor.querySelectorAll(".nota-input").forEach(input => {
+        input.addEventListener("input", calcular);
+      });
+
+      // ---------- Auto-resize del iframe (Moodle) ----------
+      function notificarAltura() {
+        const altura = document.documentElement.scrollHeight;
+        window.parent.postMessage({ tipo: "calendario-cun-altura", altura: altura }, "*");
+      }
+
+      window.addEventListener("load", notificarAltura);
+      window.addEventListener("resize", notificarAltura);
+      new ResizeObserver(notificarAltura).observe(document.body);
+
+      // ---------- Inicio ----------
+      marcarSemanaActual();
+      calcular();
+    })();
+  </script>
+</body>
+</html>
