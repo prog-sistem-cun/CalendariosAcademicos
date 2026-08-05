@@ -69,6 +69,7 @@
       color: var(--accent-soft);
       text-transform: none;
       letter-spacing: normal;
+      white-space: pre-line;
     }
 
     /* ============================================================
@@ -103,7 +104,7 @@
     .fila-actividad { background: var(--row-bg); }
 
     .celda-actividad { text-align: left; }
-    .celda-actividad small { color: var(--ink-dim); }
+    .celda-actividad small { color: var(--ink-dim); white-space: pre-line; }
 
     .celda-corte {
       background: var(--cell-strong-bg);
@@ -305,43 +306,35 @@
        - notaCierre: texto adicional bajo la fecha final (opcional)
        ============================================================ */
     const CONFIG = {
-      subtitulo: "26V02 / 26T02 / 26P02 Bloque II | 26V03 / 26T03 / 26P03 Bloque I",
+      subtitulo: "26V03 / 26T03 / 26P03 Bloque II\n26V04 / 26T04 / 26P04 Bloque I",
       cortes: [
         {
           nombre: "Primer Corte",
           pesoCorte: 0.30,
           actividades: [
-            { semana: 1, inicio: "2026-05-30", fin: "2026-06-07", nombre: "Introducción - Sesión de clase", peso: 0 },
-            { semana: 2, inicio: "2026-06-07", fin: "2026-06-08", nombre: "Quiz 1", subtitulo: "Sesión de Clase", peso: 0.10,
-              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118367" },
-            { semana: 3, inicio: "2026-06-08", fin: "2026-06-14", nombre: "Parcial 1", subtitulo: "Sesión de Clase", peso: 0.20,
-              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118371" }
+            { semana: 1, inicio: "2026-08-03", fin: "2026-08-09", nombre: "Introducción - Sesión de clase", peso: 0 },
+            { semana: 2, inicio: "2026-08-10", fin: "2026-08-16", nombre: "Quiz 1", subtitulo: "Sesión de Clase", peso: 0.10 },
+            { semana: 3, inicio: "2026-08-17", fin: "2026-08-23", nombre: "Parcial 1", subtitulo: "Sesión de Clase", peso: 0.20 }
           ]
         },
         {
           nombre: "Segundo Corte",
           pesoCorte: 0.30,
           actividades: [
-            { semana: 4, inicio: "2026-06-15", fin: "2026-06-21", nombre: "Quiz 2", subtitulo: "Sesión de Clase", peso: 0.10,
-              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118376" },
-            { semana: 5, inicio: "2026-06-22", fin: "2026-06-28", nombre: "Parcial 2", subtitulo: "Sesión de Clase", peso: 0.20,
-              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118380" }
+            { semana: 4, inicio: "2026-08-24", fin: "2026-08-30", nombre: "Quiz 2", subtitulo: "Sesión de Clase", peso: 0.10 },
+            { semana: 5, inicio: "2026-08-31", fin: "2026-09-06", nombre: "Parcial 2", subtitulo: "Sesión de Clase", peso: 0.20 }
           ]
         },
         {
           nombre: "Tercer Corte",
           pesoCorte: 0.40,
           actividades: [
-            { semana: 6, inicio: "2026-06-29", fin: "2026-07-05", nombre: "ACA - Pitch (Disciplinario - NIP)", subtitulo: "Sesión de Clase", peso: 0.34 },
-            { semana: 7, inicio: "2026-07-06", fin: "2026-07-11", nombre: "Quiz 3", subtitulo: "Sesión de Clase", peso: 0.02,
-              notaCierre: "(*Cierre Periodo 335)",
-              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118395" },
-            { semana: 7, inicio: "2026-07-06", fin: "2026-07-11", nombre: "Coevaluación", peso: 0.02,
-              url: "https://cdigital.cun.edu.co/mod/forum/view.php?id=7118394" },
-            { semana: 7, inicio: "2026-07-06", fin: "2026-07-11", nombre: "Autoevaluación", peso: 0.02,
-              url: "https://cdigital.cun.edu.co/mod/quiz/view.php?id=7118393" },
-            { semana: 8, inicio: "2026-07-12", fin: "2026-07-19", nombre: "Cierre de Notas", peso: 0 },
-            { semana: 9, inicio: "2026-07-20", fin: "2026-07-26", nombre: "Cierre de Notas", peso: 0 }
+            { semana: 6, inicio: "2026-09-07", fin: "2026-09-13", nombre: "ACA - Pitch (Disciplinares - NIP)", subtitulo: "Parcial 3 (Transversales)\nSesión de Clase", peso: 0.34 },
+            { semana: 7, inicio: "2026-09-14", fin: "2026-09-20", nombre: "Quiz 3", subtitulo: "Sesión de Clase", peso: 0.02,
+              notaCierre: "(*Cierre Periodo 335 26P03)" },
+            { semana: 7, inicio: "2026-09-14", fin: "2026-09-20", nombre: "Coevaluación", peso: 0.02 },
+            { semana: 7, inicio: "2026-09-14", fin: "2026-09-20", nombre: "Autoevaluación", peso: 0.02 },
+            { semana: 8, inicio: "2026-09-21", fin: "2026-09-27", nombre: "Cierre de Notas", subtitulo: "Sesión de Clase", peso: 0 }
           ]
         }
       ]
