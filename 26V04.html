@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Calendario de actividades y simulador de notas - Modalidad Virtual CUN">
+  <meta name="description" content="Calendario de actividades - Modalidad Virtual CUN">
   <meta name="robots" content="noindex">
   <title>Calendario de Actividades | Modalidad Virtual CUN</title>
 
@@ -22,8 +22,6 @@
       --row-bg: rgba(255, 255, 255, 0.10);
       --cell-strong-bg: rgba(255, 255, 255, 0.15);
       --thead-bg: rgba(0, 0, 0, 0.40);
-      --panel-bg: rgba(0, 0, 0, 0.50);
-      --input-bg: rgba(255, 255, 255, 0.05);
       --radius: 8px;
       --font-stack: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -122,12 +120,6 @@
 
     .celda-resultado .peso-corte { color: var(--accent-soft); }
 
-    .celda-resultado .nota-corte {
-      margin-top: 10px;
-      font-size: 24px;
-      color: var(--ink);
-    }
-
     .fila-separadora td { height: 10px; padding: 0; }
 
     /* Enlaces a actividades de CDigital */
@@ -145,27 +137,6 @@
       color: var(--accent-soft);
     }
 
-    /* ============================================================
-       SIMULADOR DE NOTA (inputs)
-       ============================================================ */
-    .celda-simulador { background: var(--input-bg); }
-
-    .nota-input {
-      width: 70px;
-      padding: 6px 8px;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.35);
-      color: var(--ink);
-      font-family: inherit;
-      font-size: 14px;
-      text-align: center;
-    }
-
-    .nota-input:focus-visible {
-      outline: 2px solid var(--accent-soft);
-      outline-offset: 1px;
-    }
 
     /* ============================================================
        SEMANA ACTUAL
@@ -178,12 +149,6 @@
 
     .fila-actividad.es-actual td:first-child {
       border-left: 6px solid var(--highlight);
-    }
-
-    .fila-actividad.es-actual .nota-input {
-      border: 2px solid var(--highlight);
-      background: rgba(0, 0, 0, 0.45);
-      font-weight: bold;
     }
 
     .badge-semana-actual {
@@ -199,32 +164,6 @@
       letter-spacing: 0.04em;
     }
 
-    /* ============================================================
-       PANEL DE RESULTADOS
-       ============================================================ */
-    .panel-resultados {
-      display: flex;
-      justify-content: space-around;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-      padding: 20px;
-      text-align: center;
-      border-radius: 12px;
-      background: var(--panel-bg);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .panel-resultados__etiqueta {
-      font-size: 14px;
-      text-transform: uppercase;
-    }
-
-    .panel-resultados__etiqueta--evaluado  { color: var(--accent-soft); }
-    .panel-resultados__etiqueta--definitiva { color: var(--accent-blue); }
-
-    #res_porcentaje { font-size: 28px; font-weight: bold; }
-    #res_definitiva { font-size: 32px; font-weight: bold; color: var(--ink); }
 
     .nota-legal {
       margin-top: 15px;
@@ -242,10 +181,7 @@
       .calendario-cun__subtitulo { font-size: 13px; }
       .tabla-calendario { font-size: 12px; }
       .tabla-calendario th, .tabla-calendario td { padding: 8px 5px; }
-      .nota-input { width: 56px; font-size: 13px; }
       .celda-resultado { font-size: 14px; }
-      .celda-resultado .nota-corte { font-size: 18px; }
-    }
 
     @media (prefers-reduced-motion: reduce) {
       * { transition: none !important; animation: none !important; }
@@ -269,28 +205,15 @@
           <th scope="col">Fecha Final</th>
           <th scope="col" class="col-actividad">Actividad</th>
           <th scope="col">% Act.</th>
-          <th scope="col">Simular nota</th>
-          <th scope="col">Cálculo Corte</th>
+          <th scope="col">% Corte Académico</th>
         </tr>
       </thead>
       <tbody id="calendario-body"><!-- Filas generadas por JS desde CONFIG --></tbody>
     </table>
 
-    <section class="panel-resultados" aria-live="polite">
-      <div>
-        <div class="panel-resultados__etiqueta panel-resultados__etiqueta--evaluado">Porcentaje Evaluado</div>
-        <div id="res_porcentaje">0%</div>
-      </div>
-      <div>
-        <div class="panel-resultados__etiqueta panel-resultados__etiqueta--definitiva">Nota Definitiva</div>
-        <div id="res_definitiva">0.00</div>
-      </div>
-    </section>
-
     <p class="nota-legal">
       * La fila resaltada indica la actividad en curso según la fecha actual.
-      La nota simulada es de manera orientativa. Las notas reales se encuentran
-      en las respectivas calificaciones de CDigital.
+      Las calificaciones oficiales se consultan directamente en CDigital.
     </p>
   </main>
 
@@ -341,7 +264,7 @@
     };
 
     /* ============================================================
-       MOTOR DE RENDERIZADO Y CÁLCULO
+       MOTOR DE RENDERIZADO
        (No requiere edición al cambiar de periodo)
        ============================================================ */
     (function iniciarCalendarioCUN() {
@@ -376,7 +299,6 @@
       if (subEl) subEl.textContent = CONFIG.subtitulo || "";
 
       CONFIG.cortes.forEach((corte, idxCorte) => {
-        const numCorte = idxCorte + 1;
         const totalFilas = corte.actividades.length;
 
         corte.actividades.forEach((act, idxAct) => {
@@ -409,21 +331,11 @@
           // Peso
           html += "<td>" + Math.round(act.peso * 100) + "%</td>";
 
-          // Simulador
-          if (act.peso > 0) {
-            html += '<td class="celda-simulador">' +
-                    '<input class="nota-input" type="number" min="0" max="5" step="0.01" inputmode="decimal"' +
-                    ' aria-label="Nota simulada: ' + esc(act.nombre) + '"' +
-                    ' data-peso="' + act.peso + '" data-corte="' + numCorte + '"></td>';
-          } else {
-            html += '<td class="celda-simulador">-</td>';
-          }
 
           // Celda de resultado del corte (solo en la primera fila del grupo)
           if (idxAct === 0) {
             html += '<td class="celda-resultado" rowspan="' + totalFilas + '">' +
-                    '<div class="peso-corte">' + Math.round(corte.pesoCorte * 100) + "%</div>" +
-                    '<div class="nota-corte" id="res_corte_' + numCorte + '">0.00</div></td>';
+                    '<div class="peso-corte">' + Math.round(corte.pesoCorte * 100) + "%</div></td>";
           }
 
           tr.innerHTML = html;
@@ -434,7 +346,7 @@
         if (idxCorte < CONFIG.cortes.length - 1) {
           const sep = document.createElement("tr");
           sep.className = "fila-separadora";
-          sep.innerHTML = '<td colspan="8">&nbsp;</td>';
+          sep.innerHTML = '<td colspan="7">&nbsp;</td>';
           tbody.appendChild(sep);
         }
       });
@@ -467,47 +379,6 @@
         });
       }
 
-      // ---------- Simulador de notas ----------
-      function calcular() {
-        const aportes = {};
-        const pesosCorte = {};
-        let porcentajeEval = 0;
-        let acumulado = 0;
-
-        CONFIG.cortes.forEach((c, i) => {
-          aportes[i + 1] = 0;
-          pesosCorte[i + 1] = c.pesoCorte;
-        });
-
-        contenedor.querySelectorAll(".nota-input").forEach(input => {
-          let val = parseFloat(input.value);
-          const peso = parseFloat(input.dataset.peso);
-          const corte = parseInt(input.dataset.corte, 10);
-
-          if (isNaN(val)) val = 0;
-          if (val < 0) { val = 0; input.value = 0; }
-          if (val > 5) { val = 5; input.value = 5; }
-
-          const aporte = val * peso;
-          acumulado += aporte;
-          if (input.value !== "") porcentajeEval += peso;
-          aportes[corte] += aporte;
-        });
-
-        Object.keys(aportes).forEach(num => {
-          const el = document.getElementById("res_corte_" + num);
-          if (el) el.textContent = (aportes[num] / pesosCorte[num]).toFixed(2);
-        });
-
-        const resPorc = document.getElementById("res_porcentaje");
-        const resDef = document.getElementById("res_definitiva");
-        if (resPorc) resPorc.textContent = Math.round(porcentajeEval * 100) + "%";
-        if (resDef) resDef.textContent = acumulado.toFixed(2);
-      }
-
-      contenedor.querySelectorAll(".nota-input").forEach(input => {
-        input.addEventListener("input", calcular);
-      });
 
       // ---------- Auto-resize del iframe (Moodle) ----------
       function notificarAltura() {
@@ -521,7 +392,6 @@
 
       // ---------- Inicio ----------
       marcarSemanaActual();
-      calcular();
     })();
   </script>
 </body>
